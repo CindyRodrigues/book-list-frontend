@@ -1,15 +1,17 @@
 import { useState } from "react"
 import { useDispatch } from "react-redux"
-import { addBookAsync } from "./booksSlice"
-import { useNavigate } from "react-router-dom"
+import { addBookAsync, updateBookAsync } from "./booksSlice"
+import { useLocation, useNavigate } from "react-router-dom"
 
 const BookForm = () => {
     const dispatch = useDispatch()
     const navigate = useNavigate()
+    const location = useLocation()
+
     const [formData, setFormData] = useState({
-        bookName: "",
-        author: "",
-        genre: ""
+        bookName: location.state?.bookName || "",
+        author: location.state?.author || "",
+        genre: location.state?.genre || ""
     })
     const [successMessage, setSuccessMessage] = useState("")
 
@@ -23,13 +25,21 @@ const BookForm = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault()
-        dispatch(addBookAsync(formData))
+        if(location.state) {
+            const bookId = location.state?._id
+            const updatedBook = formData
+            dispatch(updateBookAsync({ bookId, updatedBook }))
+            setSuccessMessage("Book updated successfully!")
+        } else {
+            const newStudent = formData
+            dispatch(addBookAsync(newStudent))
+            setSuccessMessage("Book added successfully!")
+        }
         setFormData({
             bookName: "",
             author: "",
             genre: ""
         })
-        setSuccessMessage("Book added successfully!")
         setTimeout(() => {
             navigate("/")
         }, 1000)
@@ -37,7 +47,7 @@ const BookForm = () => {
 
     return (
         <div className="container py-5">
-            <h2 className="mb-3">Add Book</h2>
+            <h2 className="mb-3">{location.state ? "Edit Book" : "Add Book"}</h2>
             <form onSubmit={handleSubmit}>
                 <div className="mb-3">
                     <label htmlFor="bookName" className="form-label">Name:</label>
@@ -51,7 +61,7 @@ const BookForm = () => {
                     <label htmlFor="genre" className="form-label">Genre:</label>
                     <input type="text" id="genre" name="genre" value={formData.genre} className="form-control" onChange={handleChange} required />
                 </div>
-                <button type="submit" className="btn btn-primary mb-3">Add</button>
+                <button type="submit" className="btn btn-primary mb-3">{location.state ? "Update" : "Add"}</button>
             </form>
             {successMessage && <p>{successMessage}</p>}
         </div>
