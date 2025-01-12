@@ -11,8 +11,13 @@ export const deleteBookAsync = createAsyncThunk("books/deleteBook", async (bookI
     return response.data
 })
 
-export const addBookAsync = createAsyncThunk("books/addBookAsync", async (newBook) => {
-    const response = await axios.post(`https://book-list-backend-rose.vercel.app/books`, newBook)
+export const addBookAsync = createAsyncThunk("books/addBook", async (newBook) => {
+    const response = await axios.post("https://book-list-backend-rose.vercel.app/books", newBook)
+    return response.data
+})
+
+export const updateBookAsync = createAsyncThunk("books/updateBook", async ({ bookId, updatedBook }) => {
+    const response = await axios.put(`https://book-list-backend-rose.vercel.app/books/${bookId}`, updatedBook)
     return response.data
 })
 
@@ -55,6 +60,20 @@ export const booksSlice = createSlice({
             state.books.push(action.payload)
         })
         builder.addCase(addBookAsync.rejected, (state, action) => {
+            state.status = "error"
+            state.error = action.error.message
+        })
+        builder.addCase(updateBookAsync.pending, (state) => {
+            state.status = "loading"
+        })
+        builder.addCase(updateBookAsync.fulfilled, (state, action) => {
+            state.status = "success"
+            const index = state.books.findIndex((book) => book._id === action.payload._id)
+            if(index >= 0) {
+                state.books[index] = action.payload
+            }
+        })
+        builder.addCase(updateBookAsync.rejected, (state, action) => {
             state.status = "error"
             state.error = action.error.message
         })
